@@ -25,25 +25,39 @@ jobs:
 
       # Prefer using OIDC + role assumption (no long-lived keys).
       - name: Configure AWS credentials (OIDC role)
-        if: env.AWS_ROLE_ARN != ''
+        if: ${{ env.AWS_ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Fallback to access keys if role not provided.
+      # Fallback to access keys ONLY if both keys are provided.
       - name: Configure AWS credentials (access keys)
-        if: env.AWS_ROLE_ARN == ''
+        if: ${{ env.AWS_ROLE_ARN == '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # If neither an OIDC role nor access keys are configured, fail fast with guidance.
+      - name: Fail if no AWS credentials configuration present
+        if: ${{ env.AWS_ROLE_ARN == '' && (secrets.AWS_ACCESS_KEY_ID == '' || secrets.AWS_SECRET_ACCESS_KEY == '') }}
+        run: |
+          echo "No AWS credentials configured for deployment. Configure one of the following:"
+          echo "- Set repo variable AWS_ROLE_ARN for OIDC role assumption (recommended)."
+          echo "  Also ensure AWS_REGION and S3_BUCKET are set (repo variables or secrets)."
+          echo "- Or set secrets AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY."
+          exit 1
+
       - name: Validate required env
         run: |
           if [ -z "${S3_BUCKET}" ] ; then echo "S3_BUCKET is required (set as Repository Variable or Secret)"; exit 1; fi
           if [ -z "${AWS_REGION}" ] ; then echo "AWS_REGION is required (set as Repository Variable or Secret)"; exit 1; fi
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity --region "$AWS_REGION"
 
       - name: Show target
         run: echo "Deploying to s3://${S3_BUCKET} in ${AWS_REGION}"
