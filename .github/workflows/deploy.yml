@@ -48,11 +48,9 @@ jobs:
       - name: Show target
         run: echo "Deploying to s3://${S3_BUCKET} in ${AWS_REGION}"
 
-      # Ensure AWS CLI is available
-      - name: Setup AWS CLI
-        uses: aws-actions/setup-aws-cli@v2
-        with:
-          awscli-version: 2.x
+      # Ensure AWS CLI is available (use preinstalled CLI on runner)
+      - name: Verify AWS CLI
+        run: aws --version
 
       # Sync all files with long cache by default (immutable assets). We'll override html/sw/manifest below.
       - name: Sync site to S3 (long cache for assets)
