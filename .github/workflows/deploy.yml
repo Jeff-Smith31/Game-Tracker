@@ -48,66 +48,59 @@ jobs:
       - name: Show target
         run: echo "Deploying to s3://${S3_BUCKET} in ${AWS_REGION}"
 
+      # Ensure AWS CLI is available
+      - name: Setup AWS CLI
+        uses: aws-actions/setup-aws-cli@v2
+        with:
+          awscli-version: 2.x
+
       # Sync all files with long cache by default (immutable assets). We'll override html/sw/manifest below.
       - name: Sync site to S3 (long cache for assets)
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          # Exclude files we will upload with different cache headers
-          command: >-
-            s3 sync . s3://$S3_BUCKET
-            --delete
-            --exclude ".git/*"
-            --exclude ".github/*"
-            --exclude "README.md"
-            --exclude "index.html"
-            --exclude "service-worker.js"
-            --exclude "manifest.webmanifest"
-            --cache-control "public, max-age=31536000, immutable"
+        run: |
+          aws s3 sync . s3://"$S3_BUCKET" \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "README.md" \
+            --exclude "index.html" \
+            --exclude "service-worker.js" \
+            --exclude "manifest.webmanifest" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --region "$AWS_REGION"
 
       - name: Upload index.html (no-store)
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          command: >-
-            s3 cp index.html s3://$S3_BUCKET/index.html
-            --content-type "text/html; charset=utf-8"
-            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate"
+        run: |
+          aws s3 cp index.html s3://"$S3_BUCKET"/index.html \
+            --content-type "text/html; charset=utf-8" \
+            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate" \
+            --region "$AWS_REGION"
 
       - name: Upload service-worker.js (no-store)
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          command: >-
-            s3 cp service-worker.js s3://$S3_BUCKET/service-worker.js
-            --content-type "application/javascript"
-            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate"
+        run: |
+          aws s3 cp service-worker.js s3://"$S3_BUCKET"/service-worker.js \
+            --content-type "application/javascript" \
+            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate" \
+            --region "$AWS_REGION"
 
       - name: Upload manifest.webmanifest (no-store)
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          command: >-
-            s3 cp manifest.webmanifest s3://$S3_BUCKET/manifest.webmanifest
-            --content-type "application/manifest+json"
-            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate"
+        run: |
+          aws s3 cp manifest.webmanifest s3://"$S3_BUCKET"/manifest.webmanifest \
+            --content-type "application/manifest+json" \
+            --cache-control "no-store, no-cache, must-revalidate, proxy-revalidate" \
+            --region "$AWS_REGION"
 
       - name: Set content-type for SVG icon (optional)
         if: ${{ hashFiles('icons/logo.svg') != '' }}
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          command: >-
-            s3 cp icons/logo.svg s3://$S3_BUCKET/icons/logo.svg
-            --content-type "image/svg+xml"
-            --cache-control "public, max-age=31536000, immutable"
+        run: |
+          aws s3 cp icons/logo.svg s3://"$S3_BUCKET"/icons/logo.svg \
+            --content-type "image/svg+xml" \
+            --cache-control "public, max-age=31536000, immutable" \
+            --region "$AWS_REGION"
 
       - name: Create CloudFront invalidation (optional)
         if: env.CLOUDFRONT_DISTRIBUTION_ID != ''
-        uses: aws-actions/aws-cli-action@v2
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          command: >-
-            cloudfront create-invalidation
-            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID
-            --paths "/index.html" "/service-worker.js" "/manifest.webmanifest"
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/index.html" "/service-worker.js" "/manifest.webmanifest" \
+            --region "$AWS_REGION"
