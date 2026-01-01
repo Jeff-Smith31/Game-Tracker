@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d47a1" />
+  <title>TableTop HQ — Letter Jam Sheet</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/logo.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/logo.svg" />
+  <meta name="description" content="TableTop HQ — Offline virtual sheets for board games. Letter Jam sheet template." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img class="logo" src="icons/logo.svg" alt="TableTop HQ" />
+      <div class="titles">
+        <h1>TableTop HQ</h1>
+        <p class="subtitle">Letter Jam — Virtual Sheet</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="installBtn" class="btn primary" hidden>Install</button>
+      <button id="helpBtn" class="btn ghost" aria-label="Help">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="sheet">
+      <div class="sheet-controls">
+        <button id="addRowBtn" class="btn">Add Row</button>
+        <button id="removeRowBtn" class="btn">Remove Row</button>
+        <span class="spacer"></span>
+        <button id="saveBtn" class="btn primary">Save</button>
+        <button id="clearBtn" class="btn danger">Clear</button>
+        <div class="io">
+          <button id="exportBtn" class="btn">Export</button>
+          <label class="file-btn btn">
+            Import
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+        </div>
+      </div>
+
+      <div id="grid" class="grid" role="table" aria-label="Letter Jam sheet grid"></div>
+
+      <details class="notes">
+        <summary>Game Notes</summary>
+        <textarea id="notes" placeholder="Notes, clues, guesses..."></textarea>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year"></span> TableTop HQ • Works fully offline • Blue & Black Theme</p>
+    <p><a href="#" id="howToInstall">How to install on my phone?</a></p>
+  </footer>
+
+  <dialog id="helpDialog">
+    <h3>Letter Jam Virtual Sheet</h3>
+    <ul>
+      <li>Tap a cell to enter a single letter (A–Z). Leave blank if unknown.</li>
+      <li>Use Add/Remove Row to match your word length or clue rows.</li>
+      <li>Save stores everything on your device. No internet needed.</li>
+      <li>Export creates a JSON file; Import loads one back.</li>
+      <li>Use the Install button (or browser menu) to add TableTop HQ to your home screen.</li>
+    </ul>
+    <button class="btn" id="closeHelp">Close</button>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
